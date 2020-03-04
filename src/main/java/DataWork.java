@@ -130,7 +130,7 @@ public class DataWork {
             boolean exit = false;
 
             if (fileName.contains(".csv")) {
-                fileName.replaceAll(".csv", "");
+                fileName = fileName.replace(".csv","");
             }
 
 
@@ -222,6 +222,11 @@ public class DataWork {
 
         System.out.println("Enter name of the file : ");
         String nameOfFile = sc.next();
+
+        if(nameOfFile.contains(".csv")) {
+
+            nameOfFile= nameOfFile.replace(".csv","");
+        }
 
         try (
                 Writer writer = Files.newBufferedWriter(Paths.get(nameOfFile + ".csv"));
