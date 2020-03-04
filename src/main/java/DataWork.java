@@ -1,37 +1,85 @@
-
 import com.opencsv.CSVReader;
 
-import java.io.FileWriter;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Array;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import com.opencsv.CSVReaderBuilder;
 import com.opencsv.CSVWriter;
-import com.sun.deploy.ref.Helpers;
-
-import static java.lang.System.exit;
 
 public class DataWork {
     Scanner sc = new Scanner(System.in);
+
     public static void main(String[] args) throws IOException {
         DataWork worker = new DataWork();
         worker.menu();
     }
+
+    public void deleteall() throws IOException {
+        try (Stream<Path> walk = Files.walk(Paths.get(""))) {
+
+            List<String> result = walk.map(x -> x.toString())
+                    .filter(f -> f.endsWith(".csv")).collect(Collectors.toList());
+            int removed = 0;
+            for (int i = 0; i < result.size(); i++) {
+                
+                System.out.println("Pointer -> " + 3);
+                System.out.println("Results : " + result.size());
+                if(result.get(i).contains("deleted-file")) {
+                    System.out.println("Removing : " + result.get(i));
+                    result.remove(i);
+                   
+                } else {
+                    System.out.println(result.get(i)); 
+                }
+            }
+            System.out.println("Are you sure you want to delete all " + result.size() + " files?");
+            int max = 30;
+            int min = 0;
+            int range = max - min + 1;
+            int rand = (int) (Math.random() * range) - min;
+            System.out.print("Y/N --> ");
+            String odpoved = sc.next();
+            if (odpoved.charAt(0) == 'y' || odpoved.charAt(0) == 'Y') {
+
+                for(int i = 0; i<result.size(); i++) {
+                    File file = new File(result.get(i));
+                    try {
+                    Path temp = Files.move(Paths.get(file.getPath()),Paths.get("trash/deleted-file"+rand+".csv"));
+                        System.out.println("File is already deleted");
+                        menu();
+                    } catch (Exception ex) {
+                        
+                        
+                    }
+                    
+                }
+                System.out.println("Files deleted.");
+                menu();
+        } else if (odpoved.charAt(0) == 'n' || odpoved.charAt(0) == 'N') {
+                System.out.println("Redirecting to menu");
+                menu();
+            }
+
+        }
+    }
+
     public void menu() throws IOException {
         System.out.println("CSV WRITER MENU");
         System.out.println("1) CSVWriter");
         System.out.println("2) CSReader");
+        System.out.println("3) Remove All .CSV Files");
+        System.out.print("--> ");
         int vyber = sc.nextInt();
         switch (vyber) {
             case 1:
@@ -40,14 +88,19 @@ public class DataWork {
             case 2:
                 returnLastData();
                 break;
+            case 3:
+                deleteall();
+                break;
             default:
                 System.out.println("Choose between 1 - 2");
                 menu();
         }
     }
+
     public void editMenu() throws IOException {
         System.out.println("1) Pridat data do existujiciho .csv souboru");
         System.out.println("2) Zmenit hodnotu dat");
+        System.out.println("3) Odstranit Data-Blocky");
         System.out.print("--> ");
         int vyber = sc.nextInt();
         switch (vyber) {
@@ -57,6 +110,9 @@ public class DataWork {
             case 2:
                 editData();
                 break;
+            case 3:
+                deleteDataBlocks();
+                break;
             default:
                 System.out.println("Vybirejte ze dvou moznosti!");
                 System.out.println("1) Pridat data do existujiciho .csv souboru");
@@ -65,6 +121,7 @@ public class DataWork {
                 break;
         }
     }
+
     public void csvWriterMenu() throws IOException {
         System.out.println("1) Vytvorit novy soubor");
         System.out.println("2) Upravit existujici soubor");
@@ -84,12 +141,14 @@ public class DataWork {
                 break;
         }
     }
+
     public void returnLastData() throws IOException {
         try (Stream<Path> walk = Files.walk(Paths.get(""))) {
             System.out.println("[LIST OF CSV FILES IN THIS FOLDER]");
             List<String> result = walk.map(x -> x.toString())
                     .filter(f -> f.endsWith(".csv")).collect(Collectors.toList());
             result.forEach(System.out::println);
+
 
             System.out.println("Enter name of the file : ");
             String nameOfFile = sc.next();
@@ -118,11 +177,17 @@ public class DataWork {
                     System.out.println("Country : " + readData.get(i)[3]);
                     System.out.println("==========================");
                 }
+            } catch(Exception ex) {
+                System.out.println("Tento soubor neexistuje. Zkuste to prosim znovu.");
+                returnLastData();
             }
         }
         menu();
     }
+
+
     public void editOldFile() {
+        String fileName = "";
         try (Stream<Path> walk = Files.walk(Paths.get(""))) {
             System.out.println("[LIST OF CSV FILES IN THIS FOLDER]");
             List<String> result = walk.map(x -> x.toString())
@@ -131,13 +196,20 @@ public class DataWork {
             result.forEach(System.out::println);
 
             System.out.println("Which file do you wan't to edit?");
-            String fileName = sc.next();
+            try {
+                fileName = sc.next();
+
+            } catch (Exception ex) {
+                System.out.println("This file doesn't exist!\nTry again.");
+
+            }
+
             boolean exit = false;
-            
+
             if (fileName.contains(".csv")) {
                 fileName = fileName.replace(".csv", "");
             }
-            
+
             try (Reader reader = Files.newBufferedReader(Paths.get(fileName + ".csv"));
                  CSVReader csvReader1 = new CSVReader(reader);
             ) {
@@ -181,6 +253,7 @@ public class DataWork {
                         switch (odpoved.charAt(0)) {
                             case 'Y':
                                 System.out.println("Reloading Writer...");
+                                break;
                             case 'y':
                                 System.out.println("Reloading writer...");
                                 break;
@@ -189,6 +262,7 @@ public class DataWork {
                                 csvWriter.writeAll(data);
 
                                 exit = true;
+                                break;
                             case 'n':
                                 csvWriter.writeAll(data);
                                 exit = true;
@@ -208,8 +282,28 @@ public class DataWork {
         }
     }
 
-    public void editData() throws IOException {
-        ArrayList<String[]> writingList = new ArrayList<>();
+    public void putToTrash(String[] datablock) throws IOException {
+        int max = 30;
+        int min = 0;
+        int range = max - min + 1;
+        int rand = (int) (Math.random() * range) - min;
+
+        try (
+
+
+                Writer writer = Files.newBufferedWriter(Paths.get("trash/deleted-db-" + rand + ".csv"));
+                CSVWriter csvWriter = new CSVWriter(writer,
+                        CSVWriter.DEFAULT_SEPARATOR,
+                        CSVWriter.NO_QUOTE_CHARACTER,
+                        CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                        CSVWriter.DEFAULT_LINE_END);
+        ) {
+            csvWriter.writeNext(datablock);
+        }
+    }
+
+    public void deleteDataBlocks() throws IOException {
+        String slctFile = "";
         ArrayList<String[]> temp = new ArrayList<>();
         try (Stream<Path> walk = Files.walk(Paths.get(""))) {
             System.out.println("[LIST OF CSV FILES IN THIS FOLDER]");
@@ -218,18 +312,21 @@ public class DataWork {
 
             result.forEach(System.out::println);
         }
-        
+
         System.out.print("Select file > ");
-        String slctFile = sc.next();
+        try {
+            slctFile = sc.next();
+        } catch (Exception ex) {
+            System.out.println("This file doesn't exist. Try again.");
+            deleteDataBlocks();
+        }
         if (slctFile.contains(".cvs")) {
             slctFile = slctFile.replace(".cvs", "");
         }
-
         try (Reader reader = Files.newBufferedReader(Paths.get(slctFile + ".csv"));
              CSVReader csvReader1 = new CSVReader(reader);
         ) {
             List<String[]> readData = csvReader1.readAll();
-            
             for (int x = 0; x < readData.size(); x++) {
                 int xplus = x + 1;
                 temp.add(new String[]{readData.get(x)[0], readData.get(x)[1], readData.get(x)[2], readData.get(x)[3]});
@@ -242,7 +339,72 @@ public class DataWork {
                 System.out.println("Country : " + readData.get(x)[3]);
                 System.out.println("****************************");
             }
-            
+
+            System.out.println("Jaky datablock chcete odstranit (1-" + temp.size() + ")");
+            System.out.print("--> ");
+            int editingDataBlock = sc.nextInt();
+            editingDataBlock--;
+            putToTrash(temp.get(editingDataBlock));
+            temp.remove(editingDataBlock);
+            editingDataBlock++;
+            System.out.println("DATABLOCK#" + editingDataBlock + " HAS BEEN DELETED!");
+        } catch (Exception ex) {
+            System.out.println();
+            System.out.println("*****************************************\n");
+            System.out.println("\nThis file doesn't exist. Try again!\n");
+            System.out.println("\n*****************************************");
+            deleteDataBlocks();
+        }
+        try (
+                Writer writer = Files.newBufferedWriter(Paths.get(slctFile + ".csv"));
+                CSVWriter csvWriter = new CSVWriter(writer,
+                        CSVWriter.DEFAULT_SEPARATOR,
+                        CSVWriter.NO_QUOTE_CHARACTER,
+                        CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+                        CSVWriter.DEFAULT_LINE_END);
+        ) {
+            csvWriter.writeAll(temp);
+
+            csvWriter.flush();
+            menu();
+        }
+    }
+
+    public void editData() throws IOException {
+        ArrayList<String[]> writingList = new ArrayList<>();
+        ArrayList<String[]> temp = new ArrayList<>();
+        try (Stream<Path> walk = Files.walk(Paths.get(""))) {
+            System.out.println("[LIST OF CSV FILES IN THIS FOLDER]");
+            List<String> result = walk.map(x -> x.toString())
+                    .filter(f -> f.endsWith(".csv")).collect(Collectors.toList());
+
+            result.forEach(System.out::println);
+        }
+
+        System.out.print("Select file > ");
+        String slctFile = sc.next();
+        if (slctFile.contains(".cvs")) {
+            slctFile = slctFile.replace(".cvs", "");
+        }
+
+        try (Reader reader = Files.newBufferedReader(Paths.get(slctFile + ".csv"));
+             CSVReader csvReader1 = new CSVReader(reader);
+        ) {
+            List<String[]> readData = csvReader1.readAll();
+
+            for (int x = 0; x < readData.size(); x++) {
+                int xplus = x + 1;
+                temp.add(new String[]{readData.get(x)[0], readData.get(x)[1], readData.get(x)[2], readData.get(x)[3]});
+                System.out.println("\n****************************");
+                System.out.println("DATABLOCK" + xplus);
+                System.out.println("****************************");
+                System.out.println("Name : " + readData.get(x)[0]);
+                System.out.println("Email : " + readData.get(x)[1]);
+                System.out.println("Phone : " + readData.get(x)[2]);
+                System.out.println("Country : " + readData.get(x)[3]);
+                System.out.println("****************************");
+            }
+
             System.out.println("Jaky datablock chcete upravovat (1-" + temp.size() + ")");
             System.out.print("--> ");
             int editingDataBlock = sc.nextInt();
@@ -261,6 +423,7 @@ public class DataWork {
                 case 0:
                     System.out.print("Enter new name : ");
                     String newName = sc.next();
+
                     temp.remove(editingDataBlock);
                     temp.add(editingDataBlock, new String[]{newName, readData.get(editingDataBlock)[1], readData.get(editingDataBlock)[2], readData.get(editingDataBlock)[3]});
                     break;
@@ -297,6 +460,7 @@ public class DataWork {
             menu();
         }
     }
+
     public void writeData() throws IOException {
         ArrayList<String[]> data = new ArrayList<String[]>();
         System.out.println("Enter name of the file : ");
